@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      font: 10px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
+    .area {
+      fill: steelblue;
+    }
+  </style>
+</head>
+
+
+<script src="https://d3js.org/d3.v3.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+
+  drawChart();
+  setInterval(drawChart, 1000);
+  function drawChart() {
+    var data = [];
+    //  console.log(data);
+    var last200;
+    var final_data = [];
+    $.ajax({
+      type: 'GET',
+      dataType: 'json',
+      url: 'http://localhost:3000/javascripts/json.json',
+      success: function (final_json) {
+
+        if ((final_json.historyroot.length) < 200) {
+          last200 = final_json.historyroot.filter(function (el, index) {
+            return index >= final_json.historyroot.length - final_json.historyroot.length;
+          });
+        }
+        else {
+          last200 = final_json.historyroot.filter(function (el, index) {
+            return index >= final_json.historyroot.length - 200;
+          });
+        }
+
+        for (var k in last200) {
+          final_data.push({ date: last200[k].timestamp, close: last200[k].data.memory.percentage });         
+        };
+
+        d3.select("#chart_div").selectAll("*").remove();
+        // console.log(data);
+
+
+
+        var margin = { top: 20, right: 20, bottom: 30, left: 50 },
+          width = 1700 - margin.left - margin.right,
+          height = 300 - margin.top - margin.bottom;
+
+        var parseDate = d3.time.format("%H:%M:%S").parse;
+        //var parseDate = d3.time.format("%d-%b-%y").parse;
+        var x = d3.time.scale()
+          .range([0, width]);
+
+        var y = d3.scale.linear()
+          .range([height, 0]);
+
+          let timeFormat = d3.time.format("%H:%M:%S");
+        var xAxis = d3.svg.axis()
+          .scale(x)
+          .orient("bottom")
+          .ticks(d3.time.minute, 1)
+         
+          .tickFormat(timeFormat)
+          ;
+
+        var yAxis = d3.svg.axis()
+          .scale(y)
+          .orient("left");
+
+        var area = d3.svg.area()
+          .x(function (d) { return x(d.date); })
+          .y0(height)
+          .y1(function (d) { return y(d.close); });
+
+        var svg = d3.select("#chart_div").append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+          final_data.forEach(function (d) {
+          d.date = parseDate(d.date);
+          d.close = +d.close;
+        });
+
+        x.domain(d3.extent(final_data, function (d) { return d.date; }));
+        y.domain([0, d3.max(final_data, function (d) { return d.close; })]);
+
+        svg.append("path")
+          .datum(final_data)
+          .attr("class", "area")
+          .attr("d", area);
+
+        svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+
+          .call(xAxis);
+
+        svg.append("g")
+          .attr("class", "y axis")
+          .call(yAxis)
+          .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", ".71em")
+          .style("text-anchor", "end")
+          .text("Price ($)");
+
+      }
+    });
+  }
+
+</script>
+
+<body>
+  <div id="chart_div" style="width: 100%; height: 500px;"></div>
+</body>
+
+</html>
+
+
+
+
+
+
+data = [{"date":"1-May-12","close":"582.13"},
+{"date":"09:11:51","close":"570.98"},
+{"date":"10:11:51","close":"603.00"},
+{"date":"11:11:51","close":"550.70"},
+{"date":"12:11:51","close":"530.00"},
+{"date":"13:11:51","close":"490.28"},
+{"date":"14:11:51","close":"470.70"},
+{"date":"15:11:51","close":"460.98"},
+{"date":"16:11:51","close":"440.44"},
+{"date":"17:11:51","close":"430.34"},
+{"date":"18:11:51","close":"420.70"},
+{"date":"19:11:51","close":"390.13"},
+];
+
+
+
+
+
+
+		data = [{"date":"1-May-12","close":"582.13"},
+{"date":"30-Apr-12","close":"570.98"},
+{"date":"27-Apr-12","close":"603.00"},
+{"date":"26-Apr-12","close":"550.70"},
+{"date":"25-Apr-12","close":"530.00"},
+{"date":"24-Apr-12","close":"490.28"},
+{"date":"23-Apr-12","close":"470.70"},
+{"date":"20-Apr-12","close":"460.98"},
+{"date":"19-Apr-12","close":"440.44"},
+{"date":"18-Apr-12","close":"430.34"},
+{"date":"17-Apr-12","close":"420.70"},
+{"date":"16-Apr-12","close":"390.13"},
+{"date":"13-Apr-12","close":"380.23"},
+{"date":"12-Apr-12","close":"370.77"},
+{"date":"11-Apr-12","close":"360.20"},
+{"date":"10-Apr-12","close":"350.44"},
+{"date":"9-Apr-12","close":"330.23"},
+{"date":"5-Apr-12","close":"330.68"},
+{"date":"4-Apr-12","close":"310.31"},
+{"date":"3-Apr-12","close":"300.32"},
+{"date":"2-Apr-12","close":"618.63"},
+{"date":"30-Mar-12","close":"350.55"},
+{"date":"29-Mar-12","close":"609.86"},
+{"date":"28-Mar-12","close":"617.62"},
+{"date":"27-Mar-12","close":"614.48"},
+{"date":"26-Mar-12","close":"300.98"},
+{"date":"23-Mar-12","close":"400.05"},
+{"date":"22-Mar-12","close":"500.34"},
+{"date":"21-Mar-12","close":"602.50"},
+{"date":"20-Mar-12","close":"605.96"},
+{"date":"19-Mar-12","close":"601.10"},
+{"date":"16-Mar-12","close":"585.57"},
+{"date":"15-Mar-12","close":"585.56"},
+{"date":"14-Mar-12","close":"589.58"},
+{"date":"13-Mar-12","close":"568.10"},
+{"date":"12-Mar-12","close":"552.00"},
+{"date":"9-Mar-12","close":"545.17"},
+{"date":"8-Mar-12","close":"541.99"},
+{"date":"7-Mar-12","close":"530.69"},
+{"date":"6-Mar-12","close":"530.26"},
+{"date":"5-Mar-12","close":"533.16"},
+{"date":"2-Mar-12","close":"545.18"},
+{"date":"1-Mar-12","close":"340.47"},
+{"date":"29-Feb-12","close":"350.44"},
+{"date":"28-Feb-12","close":"330.41"},
+{"date":"27-Feb-12","close":"325.76"},
+{"date":"24-Feb-12","close":"320.41"},
+{"date":"23-Feb-12","close":"315.39"},
+{"date":"22-Feb-12","close":"300.04"}
+];
+
+
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      font: 10px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
+    .area {
+      fill: steelblue;
+    }
+  </style>
+</head>
+
+
+<script src="https://d3js.org/d3.v3.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+  var final_data = [],
+    final_json = [],
+    t = 0,
+    timeout;
+  function refresh() {
+    $.ajax({
+      type: 'GET',
+      dataType: 'json',
+      url: 'http://localhost:3000/javascripts/json.json',
+      success: function (final_json) {
+
+        // final_json = [{ "date": "1-May-12", "close": "582.13" },
+        // { "date": "09:11:51", "close": "570.98" },
+        // { "date": "10:11:51", "close": "603.00" },
+        // { "date": "11:11:51", "close": "550.70" },
+        // { "date": "12:11:51", "close": "530.00" },
+        // { "date": "13:11:51", "close": "490.28" },
+        // { "date": "14:11:51", "close": "470.70" },
+        // { "date": "15:11:51", "close": "460.98" },
+        // { "date": "16:11:51", "close": "440.44" },
+        // { "date": "17:11:51", "close": "430.34" },
+        // { "date": "18:11:51", "close": "420.70" },
+        // { "date": "19:11:51", "close": "390.13" },
+        // ];
+
+
+
+        redraw(final_json);
+        timeout = setTimeout(refresh, 1000);
+
+      }
+    });
+
+  }
+  refresh();
+  function redraw(final_json) {
+    var parseDate
+    // if ((final_json.historyroot.length) < 200) {
+    //   last200 = final_json.historyroot.filter(function (el, index) {
+    //     return index >= final_json.historyroot.length - final_json.historyroot.length;
+    //   });
+    // }
+    // else {
+    //   last200 = final_json.historyroot.filter(function (el, index) {
+    //     return index >= final_json.historyroot.length - 200;
+    //   });
+    // }
+
+    for (var k in final_json.historyroot) {
+      final_data.push({ date: final_json.historyroot[k].timestamp, close: final_json.historyroot[k].data.memory.percentage });
+    };
+
+    
+
+
+    //   final_data = final_json;
+
+    console.log(final_data);
+
+
+    d3.select("#chart_div").selectAll("*").remove();
+    // console.log(data);
+
+
+
+    var margin = { top: 20, right: 20, bottom: 30, left: 50 },
+      width = 1700 - margin.left - margin.right,
+      height = 300 - margin.top - margin.bottom;
+
+    parseDate = d3.time.format("%H:%M:%S").parse;
+
+    var x = d3.time.scale()
+      .range([0, width]);
+
+    var y = d3.scale.linear()
+      .range([height, 0]);
+
+    let timeFormat = d3.time.format("%H:%M");
+    var xAxis = d3.svg.axis()
+      .scale(x)
+      .orient("bottom")
+      .ticks(d3.time.minute, 5)
+
+      .tickFormat(timeFormat)
+      ;
+
+    var yAxis = d3.svg.axis()
+      .scale(y)
+      .orient("left");
+
+    var area = d3.svg.area()
+      .x(function (d) { return x(d.date); })
+      .y0(height)
+      .y1(function (d) { return y(d.close); });
+
+    var svg = d3.select("#chart_div").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+    final_data.forEach(function (d) {
+      d.date = parseDate(d.date);
+      d.close = +d.close;
+    });
+
+    x.domain(d3.extent(final_data, function (d) { return d.date; }));
+    y.domain([0, d3.max(final_data, function (d) { return d.close; })]);
+
+    svg.append("path")
+      .datum(final_data)
+      .attr("class", "area")
+      .attr("d", area);
+
+    svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+      .selectAll("text")
+      .style("text-anchor", "end")
+      .attr("dx", "-.10em")
+      .attr("dy", ".15em")
+      .attr("transform", "rotate(-65)");
+
+    svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+      .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Price ($)");
+
+    final_data = [];
+    final_json = [];
+    console.log(final_data);
+  }
+
+
+
+</script>
+
+<body>
+  <div id="chart_div" style="width: 100%; height: 500px;"></div>
+</body>
+
+</html>
+
+[19:06] Ajay Ojha
+    
+<script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+      
+      var chart = null;
+    var timeout = 0;  
+    //setInterval(drawChart(), 3000);
+    //setInterval(drawChart, 1000);
+    
+      function drawChart() {
+      
+        $.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: 'http://localhost:3000/javascripts/json.json',        
+        success: function(data) {
+        var data = google.visualization.arrayToDataTable([
+          ['Year', 'Sales', 'Expenses'],
+          ['2013',  1000,      400],
+          ['2014',  1170,      460],
+          ['2015',  660,       1120],
+          ['2016',  1030,      540]
+        ]);
+
+
+        var options = {
+          title: 'Company Performance',
+          hAxis: {title: 'Year',  titleTextStyle: {color: '#333'}},
+          vAxis: {minValue: 0}
+        };
+
+
+if(chart != null){
+chart.clearChart();
+chart = null;
+}
+
+
+       chart = new google.visualization.AreaChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+        if(timeout)
+            window.clearTimeout(timeout);
+        timeout = setTimeout(drawChart,1000);
+        }  
+        });
+        
+      }
+      
+      drawChart();
+    </script>
+
+
+
+
+
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+	  
+	  var chart = null;
+	  
+	//setInterval(drawChart(), 3000);
+	setInterval(drawChart, 1000);
+	
+      function drawChart() {
+	  
+		$.ajax({
+		type: 'GET',
+		dataType: 'json',
+		url: 'http://localhost:3000/javascripts/json.json',		
+		success: function(data) {
+		}  
+		});
+				
+        var data = google.visualization.arrayToDataTable([
+          ['Year', 'Sales', 'Expenses'],
+          ['2013',  1000,      400],
+          ['2014',  1170,      460],
+          ['2015',  660,       1120],
+          ['2016',  1030,      540]
+        ]);
+
+        var options = {
+          title: 'Company Performance',
+          hAxis: {title: 'Year',  titleTextStyle: {color: '#333'}},
+          vAxis: {minValue: 0}
+        };
+
+if(chart != null){
+chart.clearChart();
+chart = null;
+}
+
+       chart = new google.visualization.AreaChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+      }
+    </script>
+  </head>
+  <body>
+    <div id="chart_div" style="width: 100%; height: 500px;"></div>
+  </body>
+</html>
+
+
+
