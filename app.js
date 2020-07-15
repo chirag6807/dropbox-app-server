@@ -8,10 +8,6 @@ var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var loginRouter = require('./routes/login');
 var fileStoreRouter = require('./routes/filestore');
-var usersRouter = require('./routes/users');
-var customersRouter = require('./routes/customer');
-var casesRouter = require('./routes/case');
-var todoRouter = require('./routes/todo');
 global.config = require('./config/config');
 
 var app = express();
@@ -20,7 +16,7 @@ let http = require('http');
 // let socketIO = require('socket.io');
 // let io = socketIO(server);
 
-var server = app.listen(4000)
+var server = app.listen(5000)
 var io = require('socket.io').listen(server);
 
 app.use(cors())
@@ -44,10 +40,6 @@ app.use('/', indexRouter);
 app.use('/login', loginRouter);
 app.use('/filestore', fileStoreRouter);
 
-app.use('/users', usersRouter);
-app.use('/customer', customersRouter);
-app.use('/case', casesRouter);
-app.use('/todo', todoRouter);
 
 
 // catch 404 and forward to error handler
