@@ -6,6 +6,7 @@ var jwt = require('jsonwebtoken');
 // const bcrypt = require('bcrypt');
 var bcrypt = require("bcryptjs");
 var sql = require("mssql");
+let verifyToken = require('./verifytoken');
 var dbconfig = require('./dbconfig');
 const camelcaseKeys = require('camelcase-keys');
 const multer = require("multer");
@@ -14,9 +15,8 @@ const upload = multer({
   dest: "./public/images"
 });
 //File Upload
-router.post("/FileUpload/:id/:userId",
+router.post("/FileUpload/:id/:userId", verifyToken,
   upload.single("file"), (req, res) => {
-    debugger;
     console.log(req.params.userId);
     const tempPath = req.file.path;
     const targetPath = path.join(path.dirname(tempPath), req.file.originalname);
@@ -46,7 +46,7 @@ router.post("/FileUpload/:id/:userId",
   }
 );
 
-router.get('/GetAllFiles', function (req, res, next) {
+router.get('/GetAllFiles', verifyToken, function (req, res, next) {
   sql.connect(dbconfig.config, function (err) {
     if (err) console.log(err);
     var request = new sql.Request();
@@ -77,13 +77,13 @@ router.get('/GetAllFiles', function (req, res, next) {
 });
 
 
-router.get('/GetFolderFileListById/:id', function (req, res, next) {
+router.get('/GetFolderFileListById/:id', verifyToken, function (req, res, next) {
   sql.connect(dbconfig.config, function (err) {
     if (err) console.log(err);
     var request = new sql.Request();
     request.input('id', req.params.id);
-    let fileQuery = req.params.id == 'Home' ? 'select * from FileInfo where FolderId is null' : 'select * from FileInfo where FolderId = @id';
-    let folderQuery = req.params.id == 'Home' ? 'select * from Folder where IsChildFolder = 0' : 'select * from Folder where ParentFolderId = @id';
+    let fileQuery = req.params.id == 'Home' ? `select * from FileInfo where FolderId is null and CreatedBy = ${global.userId}` : `select * from FileInfo where FolderId = @id and CreatedBy = ${global.userId}`;
+    let folderQuery = req.params.id == 'Home' ? `select * from Folder where IsChildFolder = 0 and CreatedBy = ${global.userId}` : `select * from Folder where ParentFolderId = @id and CreatedBy = ${global.userId}`;
     request.query(fileQuery, function (err, result) {
 
       if (err) console.log(err)
@@ -113,15 +113,13 @@ router.get('/GetFolderFileListById/:id', function (req, res, next) {
         //  console.log(constFinalArray);
         res.send(constFinalArray);
       });
-
-
     });
   });
 });
 
 
 //Folder Create
-router.post('/FolderCreate', function (req, res, next) {
+router.post('/FolderCreate', verifyToken, function (req, res, next) {
   sql.connect(dbconfig.config, function (err) {
     if (err) console.log(err);
     let folderId = req.body.folderId == 'Home' ? '' : req.body.folderId;
@@ -141,11 +139,116 @@ router.post('/FolderCreate', function (req, res, next) {
       }
       res.send("Folder created succesfully.");
     });
-
-
-
   });
-  debugger
+});
+
+router.delete('/DeleteFile/:id/:fileName', function (req, res, next) {
+  sql.connect(dbconfig.config, function (err) {
+    if (err) console.log(err);
+    var request = new sql.Request();
+    request.input('id', req.params.id);
+    request.query('DELETE FROM FileInfo WHERE  FileId = @id', function (err, result) {
+      if (err) console.log(err);
+      let file = './public/images/' + req.params.fileName;
+      fs.unlink(file, (err) => {
+        if (err) {
+          console.error(err);
+          return res.status(404).send({ error: 'Server error!' });
+        }
+        //file removed
+      })
+      res.send("File deleted succesfully.");
+    });
+  });
+});
+
+router.delete('/DeleteFolder/:id/:fileName', function (req, res, next) {
+  sql.connect(dbconfig.config, function (err) {
+    if (err) console.log(err);
+    var request = new sql.Request();
+    request.input('id', req.params.id);
+
+
+    var folderQuery = `WITH T(xParent, xChild)AS(SELECT ParentFolderId, FolderId FROM Folder WHERE ParentFolderId=${req.params.id} UNION ALL SELECT ParentFolderId, FolderId FROM Folder INNER JOIN T ON ParentFolderId=xChild) DELETE FROM FileInfo WHERE  FolderId IN (SELECT xChild FROM T);WITH T(xParent, xChild)AS(SELECT ParentFolderId, FolderId FROM Folder WHERE ParentFolderId=${req.params.id} UNION ALL SELECT ParentFolderId, FolderId FROM Folder INNER JOIN T ON ParentFolderId=xChild) DELETE FROM Folder WHERE FolderId =${req.params.id} or ParentFolderId IN (SELECT xParent FROM T)`
+    console.log(folderQuery);
+    request.query(folderQuery, function (err, result) {
+      console
+      if (err) console.log(err);
+      let file = './public/images/' + req.params.fileName;
+      // fs.unlink(file, (err) => {
+      //   if (err) {
+      //     console.error(err);
+      //     return res.status(404).send({ error: 'Server error!' });
+      //   }
+      //   //file removed
+      // })
+      res.send("File deleted succesfully.");
+    });
+  });
+});
+
+router.put('/FolderRename', verifyToken, function (req, res, next) {
+  sql.connect(dbconfig.config, function (err) {
+    if (err) console.log(err);
+    var request = new sql.Request();
+    let sqlQuery = `UPDATE Folder set FolderName = '${req.body.folderName}'  WHERE FolderId = '${req.body.folderId}'`
+    console.log(sqlQuery);
+    request.query(sqlQuery, function (err, result) {
+      if (err) console.log(err)
+      res.send("Folder renamed succesfully.");
+    });
+  });
+});
+
+router.put('/FileRename', verifyToken, function (req, res, next) {
+  sql.connect(dbconfig.config, function (err) {
+    if (err) console.log(err);
+    var request = new sql.Request();
+    let sqlQuery = `UPDATE FileInfo set FileName = '${req.body.fileName}'  WHERE FileId = '${req.body.fileId}'`
+    console.log(sqlQuery);
+    request.query(sqlQuery, function (err, result) {
+
+
+      if (err) console.log(err);
+      let oldDir = './public/images/' + req.body.oldFileName;
+      let newDir = './public/images/' + req.body.fileName;
+      if (fs.existsSync(oldDir)) {
+        fs.renameSync(oldDir, newDir);
+      }
+      res.send("File renamed succesfully.");
+    });
+  });
+});
+
+//Folder Create
+router.post('/CommentAdd', verifyToken, function (req, res, next) {
+  sql.connect(dbconfig.config, function (err) {
+    if (err) console.log(err);
+    var request = new sql.Request();
+    let sqlQuery = `INSERT INTO Comment(UserId, FileId,Comment,CommentTime) 
+                            VALUES('${req.body.userId}','${req.body.fileId}','${req.body.comment}','${new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')}')`
+    console.log(sqlQuery);
+    request.query(sqlQuery, function (err, result) {
+      if (err) {
+        console.log(err);
+        return res.status(404).send({ error: 'Server error!' });
+      }      
+      res.send("Comment added succesfully.");
+    });
+  });
+});
+
+router.get('/GetCommentListById/:id', verifyToken, function (req, res, next) {
+  sql.connect(dbconfig.config, function (err) {
+    if (err) console.log(err);
+    var request = new sql.Request();
+    request.input('id', req.params.id);
+    request.query('select * from Comment where FileId = @id', function (err, result) {
+      if (err) console.log(err)     
+        result.recordset = camelcaseKeys(result.recordset);             
+        res.send(result.recordset);
+    });
+  });
 });
 
 module.exports = router;

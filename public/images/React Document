@@ -1,0 +1,85 @@
+
+what is React?
+
+- React is a JavaScript library for building user interfaces.
+- React is created by Facebook.(Facebook Software Engineer, Jordan Walke)
+- React is a tool for building UI components.
+- React is mainely used to build single page applications.
+- React allows us to create reusable UI components.
+
+Set up a React Environment Step by step on our Machine:
+ 
+ 1- first install NPM and Node.js 
+ 2- Installing the create-react-app packeage at global level 
+ 3- open terminal and enter npm install -g create-react-app command
+ 4- now you create  first React application easily
+ 5- create one folder React and open terminal for that and enter npx create-react-app myfirstreact comaand
+ 6- one project created in react folder
+ 6- if you followed above step then ready to run our application
+ 7- Enter cd myfirstreact command on terminal
+ 8- now enter npm start command on terminal
+ 9- in browser pop up new crea application result
+ 
+ 
+ How React Work?
+-  React creates a VIRTUAL DOM in memory.
+
+React Render HTML
+- using function ReactDOM.render()
+- The ReactDOM.render() function takes two arguments, HTML code and an HTML element.
+- ReactDOM.render(<p>Hello</p>, document.getElementById('root'));
+
+-The HTML code in this tutorial uses JSX which allows you to write HTML tags inside the JavaScript code:
+const myelement = (
+  <table>
+    <tr>
+      <th>Name</th>
+    </tr>
+    <tr>
+      <td>John</td>
+    </tr>
+    <tr>
+      <td>Elsa</td>
+    </tr>
+  </table>
+);
+
+ReactDOM.render(myelement, document.getElementById('root'));
+
+React JSX
+- JSX stands for JavaScript XML.
+- JSX allows us to write HTML in React.
+- JSX makes it easier to write and add HTML in React.
+
+React Components
+
+Components come in two types, Class components and Function components.
+
+Create a Class Component:
+
+class Car extends React.Component {
+  render() {
+    return <h2>Hi, I am a Car!</h2>;
+  }
+}
+
+Create a Function Component:
+
+function Car() {
+  return <h2>Hi, I am also a Car!</h2>;
+}
+
+React Props
+
+- Props are arguments passed into React components.
+- Props are passed to components via HTML attributes.
+
+const myelement = <Car brand="Ford" />;
+
+
+React State
+
+- The state object is where you store property values that belongs to the component.
+- When the state object changes, the component re-renders.
+- The state object is initialized in the constructor.
+- To change a value in the state object, use the this.setState() method.

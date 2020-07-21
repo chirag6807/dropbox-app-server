@@ -7,7 +7,7 @@ var sql = require("mssql");
 var dbconfig = require('./dbconfig');
 const camelcaseKeys = require('camelcase-keys');
 var localStorage = require('localStorage');
-
+let verifyToken = require('./verifytoken');
 /* GET users listing. */
 router.get('/', function (req, res, next) {
   res.send('Get Method called.');
@@ -35,9 +35,9 @@ router.post('/login', function (req, res, next) {
         return res.status(401).send({ error: 'Password not valid!' });
       let token = jwt.sign(userData, global.config.secretKey, {
         algorithm: global.config.algorithm,
-        expiresIn: '10m'
+        expiresIn: '50m'
       });
-     
+      global.userId = result.recordset[0].UserId;
       localStorage.setItem('userId', result.recordset[0].UserId);
       res.status(200).json({
         jwtoken: token,
@@ -49,7 +49,7 @@ router.post('/login', function (req, res, next) {
 });
 
 //Add User
-router.post('/AddUser', function (req, res, next) {
+router.post('/AddUser',verifyToken, function (req, res, next) {
   sql.connect(dbconfig.config, function (err) {
     if (err) console.log(err);
     var request = new sql.Request();
@@ -66,7 +66,7 @@ router.post('/AddUser', function (req, res, next) {
             var request = new sql.Request();
             let sqlQuery = `INSERT INTO UserInfo(UserName, Password,Email,CreationDate,IsActive,FirstName,LastName) 
                             VALUES('${req.body.userName}','${password}','${req.body.email}','${new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')}','true','${req.body.firstName}','${req.body.lastName}')`
-          
+
             request.query(sqlQuery, function (err, result) {
               if (err) console.log(err)
               res.send("User added succesfully.");
@@ -78,7 +78,7 @@ router.post('/AddUser', function (req, res, next) {
   debugger
 });
 
-router.get('/GetUserById/:id', function (req, res, next) {
+router.get('/GetUserById/:id',verifyToken, function (req, res, next) {
   sql.connect(dbconfig.config, function (err) {
     if (err) console.log(err);
     var request = new sql.Request();
@@ -92,21 +92,21 @@ router.get('/GetUserById/:id', function (req, res, next) {
   });
 });
 
-router.put('/UpdateUser', function (req, res, next) {
+router.put('/UpdateUser',verifyToken, function (req, res, next) {
   sql.connect(dbconfig.config, function (err) {
-      if (err) console.log(err);
-      var request = new sql.Request();   
-      let sqlQuery =  req.body.dob!= null ? `UPDATE UserInfo set UserName = '${req.body.userName}', ProfilePath = '${req.body.profilePath}',
+    if (err) console.log(err);
+    var request = new sql.Request();
+    let sqlQuery = req.body.dob != null ? `UPDATE UserInfo set UserName = '${req.body.userName}', ProfilePath = '${req.body.profilePath}',
       Email = '${req.body.email}',Address = '${req.body.address}',DOB = '${new Date(req.body.dob).toISOString().replace(/T/, ' ').replace(/\..+/, '')}',
       FirstName = '${req.body.firstName}', LastName = '${req.body.lastName}'  WHERE UserId = '${req.body.userId}'` : `UPDATE UserInfo set UserName = '${req.body.userName}', ProfilePath = '${req.body.profilePath}',
       Email = '${req.body.email}',Address = '${req.body.address}',
-      FirstName = '${req.body.firstName}', LastName = '${req.body.lastName}'  WHERE UserId = '${req.body.userId}'`; ;
+      FirstName = '${req.body.firstName}', LastName = '${req.body.lastName}'  WHERE UserId = '${req.body.userId}'`;;
 
-      console.log(sqlQuery);
-      request.query(sqlQuery, function (err, result) {
-          if (err) console.log(err)
-          res.send("User Profile updated succesfully.");
-      });
+    console.log(sqlQuery);
+    request.query(sqlQuery, function (err, result) {
+      if (err) console.log(err)
+      res.send("User Profile updated succesfully.");
+    });
   });
 });
 
